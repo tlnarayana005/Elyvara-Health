@@ -1,4 +1,3 @@
-"""JWT authentication and password hashing utilities."""
 import bcrypt
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -26,7 +25,7 @@ def generate_token(user_id):
 
 
 def login_required(f):
-    """Decorator that enforces JWT authentication. Sets g.current_user."""
+    """Check JWT token and load user into g.current_user."""
     @wraps(f)
     def decorated(*args, **kwargs):
         auth_header = request.headers.get("Authorization", "")
@@ -49,7 +48,7 @@ def login_required(f):
 
 
 def admin_required(f):
-    """Decorator that enforces admin access. Use after @login_required."""
+    """Check that g.current_user is an admin. Use after @login_required."""
     @wraps(f)
     def decorated(*args, **kwargs):
         if not g.current_user.is_admin:

@@ -1,11 +1,8 @@
-"""All SQLAlchemy models for the EVE Healthcare platform."""
 from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-
-# ── User ──────────────────────────────────────────────────
 
 class User(db.Model):
     __tablename__ = "users"
@@ -30,8 +27,6 @@ class User(db.Model):
         }
 
 
-# ── Diagnostic Centre ────────────────────────────────────
-
 class DiagnosticCentre(db.Model):
     __tablename__ = "diagnostic_centres"
 
@@ -52,8 +47,6 @@ class DiagnosticCentre(db.Model):
         }
 
 
-# ── Diagnostic Test + CentreTest (many-to-many with price) ─
-
 class DiagnosticTest(db.Model):
     __tablename__ = "diagnostic_tests"
 
@@ -70,7 +63,7 @@ class DiagnosticTest(db.Model):
 
 
 class CentreTest(db.Model):
-    """Links a centre to a test with a specific price."""
+    """Many-to-many between centres and tests, with a price per combination."""
     __tablename__ = "centre_tests"
     __table_args__ = (db.UniqueConstraint("centre_id", "test_id", name="uq_centre_test"),)
 
@@ -93,8 +86,6 @@ class CentreTest(db.Model):
         }
 
 
-# ── Booking (with state machine) ─────────────────────────
-
 class Booking(db.Model):
     __tablename__ = "bookings"
 
@@ -103,11 +94,12 @@ class Booking(db.Model):
     STATUS_FAILED = "FAILED"
     STATUS_CANCELLED = "CANCELLED"
 
+    # which status transitions are allowed
     VALID_TRANSITIONS = {
         STATUS_PENDING: {STATUS_CONFIRMED, STATUS_FAILED, STATUS_CANCELLED},
         STATUS_CONFIRMED: {STATUS_CANCELLED},
         STATUS_FAILED: {STATUS_CANCELLED},
-        STATUS_CANCELLED: set(),
+        STATUS_CANCELLED: set(),  # terminal
     }
 
     id = db.Column(db.Integer, primary_key=True)
@@ -142,8 +134,6 @@ class Booking(db.Model):
         }
 
 
-# ── Payment ───────────────────────────────────────────────
-
 class Payment(db.Model):
     __tablename__ = "payments"
 
@@ -173,11 +163,8 @@ class Payment(db.Model):
         }
 
 
-# ── Webhook Event (idempotency) ──────────────────────────
-
 class WebhookEvent(db.Model):
-    """Stores processed webhook events. The UNIQUE constraint on event_id
-    ensures exactly-once processing even under concurrent requests."""
+    """Tracks processed webhook event IDs so we don't process the same one twice."""
     __tablename__ = "webhook_events"
 
     id = db.Column(db.Integer, primary_key=True)

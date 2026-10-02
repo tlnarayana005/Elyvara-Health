@@ -1,4 +1,3 @@
-"""Global error handling."""
 from flask import jsonify
 from sqlalchemy.exc import SQLAlchemyError
 
